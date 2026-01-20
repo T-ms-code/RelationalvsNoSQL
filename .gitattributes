@@ -1,0 +1,3 @@
+data/*.txt binary
+##Pentru a nu avea probleme cu diacriticele, caracterele de final de linie si alte setari locale
+*.md text eol=lf
