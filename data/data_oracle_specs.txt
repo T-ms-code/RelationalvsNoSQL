@@ -1,0 +1,1 @@
+[(1, 'Cardiologie'), (2, 'Neurologie'), (3, 'Pediatrie'), (4, 'Ortopedie'), (5, 'Dermatologie'), (6, 'Oncologie'), (7, 'Gastroenterologie'), (8, 'Psihiatrie'), (9, 'Oftalmologie'), (10, 'Urologie'), (11, 'Chirurgie Generala'), (12, 'Endocrinologie'), (13, 'ORL'), (14, 'Reumatologie'), (15, 'Nefrologie')]

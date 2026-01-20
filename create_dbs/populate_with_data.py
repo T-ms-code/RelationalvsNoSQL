@@ -1,12 +1,19 @@
 import random
 import oracledb
 from faker import Faker
-from datetime import datetime, timedelta
+# IMPORT CORRECT PENTRU EVAL:
+import datetime #MODUL
+from datetime import timedelta#CLASA
 
 
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 import random
+import ast
+
+
+import os
+from datetime import date # Daca sunt si obiecte date simple
 
 
 #CONFIGURARE CONEXIUNE
@@ -100,7 +107,126 @@ def insert_into_mongo(url, label, docs_data, pats_data):
 
 
 
+###PERSISTENTA#######
+# Numele fisierelor unde salvam listele
+FILES = {
+    "oracle_specs": "data/data_oracle_specs.txt",
+    "oracle_docs":  "data/data_oracle_docs.txt",
+    "oracle_has":   "data/data_oracle_has.txt",
+    "oracle_pats":  "data/data_oracle_pats.txt",
+    "oracle_treats":"data/data_oracle_treats.txt",
+    "mongo_docs":   "data/data_mongo_doctors.txt",
+    "mongo_pats":   "data/data_mongo_patients.txt"
+}
+
+def save_list_to_txt(data_list, filename):
+    """Scrie lista ca string in fisier text."""
+    with open(filename, 'w', encoding='utf-8') as f:
+        # str(data_list) transforma toata lista intr-un text imens
+        f.write(str(data_list))
+    print(f"   [SAVED] {filename}")
+
+def load_list_from_txt(filename):
+    """Citeste textul si il transforma inapoi in lista Python."""
+    with open(filename, 'r', encoding='utf-8') as f:
+        # eval() executa textul ca si cum ar fi cod Python.
+        # Deoarece textul contine "datetime.datetime(...)", va recrea obiectele corect.
+        content = f.read()
+        return eval(content)
+##########################################
+
+
+
 def generate_data():
+    #Verificam daca TOATE fisierele exista
+    all_exist = all(os.path.exists(f) for f in FILES.values())
+
+    data_specs = []
+    data_docs = []
+    data_has = []
+    data_pats = []
+    data_treats = []
+    sample_doctors = []
+    sample_patients = []
+
+
+    if all_exist:
+        print(">> [CACHE] Fisiere .txt gasite! Incarc datele de pe disc...")
+        try:
+            data_specs = load_list_from_txt(FILES["oracle_specs"])
+            data_docs =  load_list_from_txt(FILES["oracle_docs"])
+            data_has =  load_list_from_txt(FILES["oracle_has"])
+            data_pats = load_list_from_txt(FILES["oracle_pats"])
+            data_treats = load_list_from_txt(FILES["oracle_treats"])
+            sample_doctors = load_list_from_txt(FILES["mongo_docs"])
+            sample_patients = load_list_from_txt(FILES["mongo_pats"])
+
+
+            print("ORACLE")
+            conn = oracledb.connect(user=DB_USER, password=DB_PASS, dsn=DB_DNS)
+            cursor = conn.cursor()
+            print(">> Conexiune reusita!")
+            print(">> Curatare tabele (DELETE)...")
+            #Ordinea conteaza din cauza Foreign Keys!
+            cursor.execute("DELETE FROM Treatment")
+            cursor.execute("DELETE FROM Has")
+            cursor.execute("DELETE FROM Patient")
+            cursor.execute("DELETE FROM Doctor")
+            cursor.execute("DELETE FROM Specialty")
+
+            #INSERARE IN BAZA
+            print(f">> Inserare {len(data_specs)} specializari...")
+            cursor.executemany("INSERT INTO Specialty VALUES (:1, :2)", data_specs)
+            
+            print(f">> Inserare {len(data_docs)} doctori...")
+            cursor.executemany("INSERT INTO Doctor VALUES (:1, :2, :3, :4)", data_docs)
+            
+            print(f">> Inserare {len(data_has)} asocieri doctor-specialitate...")
+            cursor.executemany("INSERT INTO Has VALUES (:1, :2)", data_has)
+            
+            print(f">> Inserare {len(data_pats)} pacienti...")
+            cursor.executemany("INSERT INTO Patient VALUES (:1, :2, :3, :4)", data_pats)
+            
+            print(f">> Inserare {len(data_treats)} tratamente...")
+            cursor.executemany("INSERT INTO Treatment VALUES (:1, :2, :3, :4, :5, :6, :7, :8)", data_treats)
+
+            conn.commit()
+            print(">> POPULARE COMPLETA CU SUCCES PENTRU ORACLE!")
+            print()
+            print()
+            print()
+
+
+            print("MONGO")
+            #Standalone
+            insert_into_mongo(CONNECTION_STRING1, "STANDALONE (Port 27017)", sample_doctors, sample_patients)
+
+            #Replica Set
+            insert_into_mongo(CONNECTION_STRING2, "REPLICA SET (Port 27027)", sample_doctors, sample_patients)
+
+            #Sharded Cluster
+            insert_into_mongo(CONNECTION_STRING3, "SHARDED CLUSTER (Port 27067)", sample_doctors, sample_patients)
+
+            return
+
+        except Exception as e:
+            print(f"!! Eroare la citirea fisierelor (probabil corupte): {e}")
+            print("!! Voi regenera datele.")
+            # Daca e eroare, continuam spre generare (nu dam return)
+
+    
+    #Daca nu exista, generam datele
+    print(">> [GENERARE] Generez date noi cu Faker...")
+
+
+    data_specs = []
+    data_docs = []
+    data_has = []
+    data_pats = []
+    data_treats = []
+    sample_doctors = []
+    sample_patients = []
+
     conn = None
     try:
         print(f">> Conectare la baza de date {DB_DNS}...")
@@ -108,11 +234,6 @@ def generate_data():
         cursor = conn.cursor()
         print(">> Conexiune reusita!")
 
-        data_specs = []
-        data_docs = []
-        data_has = []
-        data_pats = []
-        data_treats = []
 
         print(">> Generare date in memorie...")
 
@@ -194,18 +315,23 @@ def generate_data():
         #INSERARE IN BAZA
         print(f">> Inserare {len(data_specs)} specializari...")
         cursor.executemany("INSERT INTO Specialty VALUES (:1, :2)", data_specs)
+        save_list_to_txt(data_specs, FILES["oracle_specs"])
         
         print(f">> Inserare {len(data_docs)} doctori...")
         cursor.executemany("INSERT INTO Doctor VALUES (:1, :2, :3, :4)", data_docs)
+        save_list_to_txt(data_docs, FILES["oracle_docs"])
         
         print(f">> Inserare {len(data_has)} asocieri doctor-specialitate...")
         cursor.executemany("INSERT INTO Has VALUES (:1, :2)", data_has)
+        save_list_to_txt(data_has, FILES["oracle_has"])
         
         print(f">> Inserare {len(data_pats)} pacienti...")
         cursor.executemany("INSERT INTO Patient VALUES (:1, :2, :3, :4)", data_pats)
+        save_list_to_txt(data_pats, FILES["oracle_pats"])
         
         print(f">> Inserare {len(data_treats)} tratamente...")
         cursor.executemany("INSERT INTO Treatment VALUES (:1, :2, :3, :4, :5, :6, :7, :8)", data_treats)
+        save_list_to_txt(data_treats, FILES["oracle_treats"])
 
         conn.commit()
         print(">> POPULARE COMPLETA CU SUCCES PENTRU ORACLE!")
@@ -223,7 +349,6 @@ def generate_data():
 
 
     ###MONGODB###
-    sample_doctors = []
     for doc in data_docs:
         sample_specialties = []
         for specialty_id in doc_skills[doc[0]]:
@@ -235,12 +360,11 @@ def generate_data():
         sample_doctors.append({
                 '_id': doc[0],
                 'name': doc[1],
-                'hire_date': datetime.combine(doc[2], datetime.min.time()),##Mongo vrea si ora, nu doar ziua (setam ora la 00:00:00)
+                'hire_date': datetime.datetime.combine(doc[2], datetime.datetime.min.time()),##Mongo vrea si ora, nu doar ziua (setam ora la 00:00:00)
                 'email': doc[3],
                 'specialties': sample_specialties
         })
 
-    sample_patients = []
     for pat in data_pats:
         sample_treatments = []
         for treat_id in pat_treatments[pat[0]]:
@@ -249,8 +373,8 @@ def generate_data():
                     'treatment_id': treat[0],
                     'doctor_id': treat[1],
                     'specialty_id': treat[3],
-                    'start_date': datetime.combine(treat[4], datetime.min.time()),
-                    'end_date': datetime.combine(treat[5], datetime.min.time()) if treat[5] else None,
+                    'start_date': datetime.datetime.combine(treat[4], datetime.datetime.min.time()),
+                    'end_date': datetime.datetime.combine(treat[5], datetime.datetime.min.time()) if treat[5] else None,
                     'diagnosis': treat[6],
                     'medication': treat[7],
                     'doctor_name': data_docs[treat[1]-101][1],
@@ -260,7 +384,7 @@ def generate_data():
         sample_patients.append({
                 '_id': pat[0],
                 'name': pat[1],
-                'born_date': datetime.combine(pat[2], datetime.min.time()),
+                'born_date': datetime.datetime.combine(pat[2], datetime.datetime.min.time()),
                 'email': pat[3],
                 'treatments': sample_treatments
         })
@@ -274,6 +398,9 @@ def generate_data():
 
     #Sharded Cluster
     insert_into_mongo(CONNECTION_STRING3, "SHARDED CLUSTER (Port 27067)", sample_doctors, sample_patients)
+
+    save_list_to_txt(sample_doctors, FILES["mongo_docs"])
+    save_list_to_txt(sample_patients, FILES["mongo_pats"])
 
 
 if __name__ == "__main__":

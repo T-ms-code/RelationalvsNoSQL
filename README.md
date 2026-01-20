@@ -136,7 +136,7 @@ Câteva informații despre script:
 - Pentru Replica Set, scriptul se conectează la nodul primar (mongo-rs1) și rulează comanda rs.initiate() pentru a inițializa replica set-ul "rs0" și a adăuga celelalte noduri (mongo-rs2 și mongo-rs3) ca secundare.
 - Pentru Sharded Cluster, scriptul se conectează la router (mongo-router) și rulează comenzile necesare pentru a adăuga config server-ele și shard-urile la cluster. De asemenea, setează regulile de sharding pentru baza de date "db_an3", inclusiv setarea dimensiunii chunk-urilor (1MB, de la default 64, pentru a observa sharding-ul) și activarea sharding-ului pe colectia "patients". 
 - Shard key-ul ales este _id, cu indexare hashed, pentru a asigura o distribuție uniformă a datelor între shard-uri, chiar dacă se va pierde puțin din performanța interogărilor range queries.
-- **Am folosit Gemini pentru a crea comanda de modificare a dimensiunii chunk-urilor și pentru a seta regulile de sharding corect.**
+- **Am folosit Gemini ([7](#ref7)) pentru a crea comanda de modificare a dimensiunii chunk-urilor și pentru a seta regulile de sharding corect.**
 
 3. Instalarea bibliotecii pymongo pentru interacțiunea cu Python:
 ```bash
@@ -149,9 +149,10 @@ pip install pymongo
 python create_dbs/populate_with_data.py
 ```
 ![DBs populated](create_dbs/image7.png)
+![DBs populated with persistence](create_dbs/image13.png)
 
 Câteva informații despre script:
-- Scriptul populate_with_data.py populează toate cele trei instanțe MongoDB (Standalone, Replica Set și Sharded Cluster) cu același set de date utilizat pentru Oracle Database, generate cu ajutorul bibliotecii Faker si care difera de la generare la generare.
+- Scriptul populate_with_data.py populează toate cele trei instanțe MongoDB (Standalone, Replica Set și Sharded Cluster) cu același set de date utilizat pentru Oracle Database, generate cu ajutorul bibliotecii Faker și care diferă de la generare la generare. Totuși, eu fac persisitente datele, deoarece le păstrez pe primele generate în folderul data sub forma de fisiere .txt, iar la generarile următoare încerc sa le iau de acolo, pentru a avea acelasi set de date la fiecare rulare.
 - Scriptul curată mai întâi colecțiile existente în fiecare instanță pentru a evita duplicarea datelor si apoi inserează documentele generate în colecțiile corespunzătoare.
 - Curățarea colecțiilor se face prin apeluri la metoda delete_many({}) pentru fiecare colecție din fiecare instanță MongoDB, asigurându-se că datele vechi sunt eliminate înainte de inserarea noilor date, dar nu dispare configurația de sharding. Pentru Oracle, tabelele sunt golite prin comenzi de DELETE.
 
@@ -164,7 +165,7 @@ docker-compose down
 ---
 
 ## Dashboard pentru distribuție, modelare și arhitectură a datelor
-Pentru a vizualiza și compara modelele de date relaționale și NoSQL, am creat un dashboard interactiv folosind Streamlit, folosind **Gemini**, dar și **cursul despre replicare și sharding**. Acesta permite explorarea diagramelor, a deciziilor de modelare și a arhitecturii alese pentru fiecare tip de bază de date.
+Pentru a vizualiza și compara modelele de date relaționale și NoSQL, am creat un dashboard interactiv folosind Streamlit, folosind **Gemini ([8](#ref8))**, dar și **cursul despre replicare și sharding**. Acesta permite explorarea diagramelor, a deciziilor de modelare și a arhitecturii alese pentru fiecare tip de bază de date.
 
 Pasii pentru rularea dashboard-ului:
 1. Instalarea streamlit, pandas (pentru tabele) și plotly (pentru grafice plăcute):
@@ -243,4 +244,9 @@ Last accessed: January 10, 2026
 https://www.mongodb.com/company/blog/building-with-patterns-the-extended-reference-pattern
 Last accessed: January 16, 2026
 
+<a id="ref7"></a>
+[7] Google, Gemini, https://gemini.google.com/, Date generated: January 16, 2026.
+
+<a id="ref8"></a>
+[8] Google, Gemini, https://gemini.google.com/, Date generated: January 20, 2026.
 
