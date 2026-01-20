@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # --- STANDALONE ---
+  mongo-standalone:
+    image: mongo:latest
+    container_name: mongo_sa
+    ports:
+      - "27017:27017"
+    networks:
+      - mongo-net
+
+
+    
+
+  # --- REPLICA SET  ---
+  mongo-rs1:
+    image: mongo:latest
+    container_name: mongo_rs1
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27027:27017"
+    networks:
+      - mongo-net
+  
+  mongo-rs2:
+    image: mongo:latest
+    container_name: mongo_rs2
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+  
+  mongo-rs3:
+    image: mongo:latest
+    container_name: mongo_rs3
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+
+
+  # --- SHARDED CLUSTER ---
+  
+  #Config Server (ReplicaSet cu 2 noduri pentru simplitate)
+  mongo-cfg1:
+    image: mongo:latest
+    container_name: mongo_cfg1
+    command: ["--configsvr", "--replSet", "cfgrs", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27037:27017"
+    networks:
+      - mongo-net
+
+  mongo-cfg2:
+    image: mongo:latest
+    container_name: mongo_cfg2
+    command: ["--configsvr", "--replSet", "cfgrs", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+  #Shard 1 (ReplicaSet cu 3 noduri pentru simplitate)
+  mongo-shard11:
+    image: mongo:latest
+    container_name: mongo_shard11
+    command: ["--shardsvr", "--replSet", "shard1rs", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27047:27017" # Mapare port extern direct pe shard
+    networks:
+      - mongo-net
+
+  mongo-shard12:
+    image: mongo:latest
+    container_name: mongo_shard12
+    command: ["--shardsvr", "--replSet", "shard1rs", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+  mongo-shard13:
+    image: mongo:latest
+    container_name: mongo_shard13
+    command: ["--shardsvr", "--replSet", "shard1rs", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+  #Shard 2 (Replica Set cu 3 noduri pentru simplitate)
+  mongo-shard21:
+    image: mongo:latest
+    container_name: mongo_shard21
+    command: ["--shardsvr", "--replSet", "shard2rs", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27057:27017"
+    networks:
+      - mongo-net
+
+  mongo-shard22:
+    image: mongo:latest
+    container_name: mongo_shard22
+    command: ["--shardsvr", "--replSet", "shard2rs", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+  mongo-shard23:
+    image: mongo:latest
+    container_name: mongo_shard23
+    command: ["--shardsvr", "--replSet", "shard2rs", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - mongo-net
+
+  
+  #Mongos Router (Punctul de intrare)
+  mongo-router:
+    image: mongo:latest
+    container_name: mongo_router
+    command: ["mongos", "--configdb", "cfgrs/mongo-cfg1:27017,mongo-cfg2:27017", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27067:27017"
+    depends_on:
+      - mongo-cfg1  
+      - mongo-cfg2
+      - mongo-shard11
+      - mongo-shard12
+      - mongo-shard13
+      - mongo-shard21
+      - mongo-shard22
+      - mongo-shard23
+    networks:
+      - mongo-net
+
+networks:
+  mongo-net:
+    driver: bridge
