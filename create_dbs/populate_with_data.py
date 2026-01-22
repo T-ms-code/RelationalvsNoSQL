@@ -20,8 +20,8 @@ from datetime import date # Daca sunt si obiecte date simple
 DB_USER = "db_an3"
 DB_PASS = "parola123"
 DB_DNS  = "localhost:1521/mihaibase" 
-CONNECTION_STRING1 = "mongodb://localhost:27017/"
-CONNECTION_STRING2 = "mongodb://localhost:27027/?directConnection=true"
+CONNECTION_STRING1 = "mongodb://localhost:27099/"
+CONNECTION_STRING2 = "mongodb://mongo_rs1:27017,mongo_rs2:27018,mongo_rs3:27019/?replicaSet=rs0"
 CONNECTION_STRING3 = "mongodb://localhost:27067/"
 
 
@@ -110,13 +110,13 @@ def insert_into_mongo(url, label, docs_data, pats_data):
 ###PERSISTENTA#######
 # Numele fisierelor unde salvam listele
 FILES = {
-    "oracle_specs": "data/data_oracle_specs.txt",
-    "oracle_docs":  "data/data_oracle_docs.txt",
-    "oracle_has":   "data/data_oracle_has.txt",
-    "oracle_pats":  "data/data_oracle_pats.txt",
-    "oracle_treats":"data/data_oracle_treats.txt",
-    "mongo_docs":   "data/data_mongo_doctors.txt",
-    "mongo_pats":   "data/data_mongo_patients.txt"
+    "oracle_specs": "data_set/data_oracle_specs.txt",
+    "oracle_docs":  "data_set/data_oracle_docs.txt",
+    "oracle_has":   "data_set/data_oracle_has.txt",
+    "oracle_pats":  "data_set/data_oracle_pats.txt",
+    "oracle_treats":"data_set/data_oracle_treats.txt",
+    "mongo_docs":   "data_set/data_mongo_doctors.txt",
+    "mongo_pats":   "data_set/data_mongo_patients.txt"
 }
 
 def save_list_to_txt(data_list, filename):
@@ -199,10 +199,10 @@ def generate_data():
 
             print("MONGO")
             #Standalone
-            insert_into_mongo(CONNECTION_STRING1, "STANDALONE (Port 27017)", sample_doctors, sample_patients)
+            insert_into_mongo(CONNECTION_STRING1, "STANDALONE (Port 27099)", sample_doctors, sample_patients)
 
             #Replica Set
-            insert_into_mongo(CONNECTION_STRING2, "REPLICA SET (Port 27027)", sample_doctors, sample_patients)
+            insert_into_mongo(CONNECTION_STRING2, "REPLICA SET (Port 27017-27018-27019)", sample_doctors, sample_patients)
 
             #Sharded Cluster
             insert_into_mongo(CONNECTION_STRING3, "SHARDED CLUSTER (Port 27067)", sample_doctors, sample_patients)
@@ -391,10 +391,10 @@ def generate_data():
 
 
     #Standalone
-    insert_into_mongo(CONNECTION_STRING1, "STANDALONE (Port 27017)", sample_doctors, sample_patients)
+    insert_into_mongo(CONNECTION_STRING1, "STANDALONE (Port 27099)", sample_doctors, sample_patients)
 
     #Replica Set
-    insert_into_mongo(CONNECTION_STRING2, "REPLICA SET (Port 27027)", sample_doctors, sample_patients)
+    insert_into_mongo(CONNECTION_STRING2, "REPLICA SET (Port 27017-27018-27019)", sample_doctors, sample_patients)
 
     #Sharded Cluster
     insert_into_mongo(CONNECTION_STRING3, "SHARDED CLUSTER (Port 27067)", sample_doctors, sample_patients)

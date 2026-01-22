@@ -1,0 +1,1 @@
+SELECT * FROM DOCTOR WHERE doctor_id = 5000;

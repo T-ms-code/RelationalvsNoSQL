@@ -3,8 +3,7 @@
 :: REPLICA SET SIMPLU 
 echo.
 echo [1/8] Configurare Replica Set Simplu (RS0)...
-docker exec mongo_rs1 mongosh --port 27017 --eval "try { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo_rs1:27017'}, {_id: 1, host: 'mongo_rs2:27017'}, {_id: 2, host: 'mongo_rs3:27017'}]}) } catch(e) { print('RS0 deja initiat sau eroare: ' + e) }"
-
+docker exec mongo_rs1 mongosh --port 27017 --eval "try { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo_rs1:27017'}, {_id: 1, host: 'mongo_rs2:27018'}, {_id: 2, host: 'mongo_rs3:27019'}]}) } catch(e) { print('Eroare: ' + e) }"
 
 :: CLUSTER SHARDED (INFRASTRUCTURA)
 echo.

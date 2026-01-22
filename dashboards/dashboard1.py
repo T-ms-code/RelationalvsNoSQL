@@ -15,8 +15,8 @@ ORACLE_PASS = "parola123"
 ORACLE_DSN  = "localhost:1521/mihaibase"
 
 #MongoDB URIs
-MONGO_SA_URI = "mongodb://localhost:27017/"
-MONGO_RS_URI = "mongodb://localhost:27027/?directConnection=true"
+MONGO_SA_URI = "mongodb://localhost:27099/"
+MONGO_RS_URI = "mongodb://mongo_rs1:27017,mongo_rs2:27018,mongo_rs3:27019/?replicaSet=rs0"
 MONGO_SHARD_URI = "mongodb://localhost:27067/"
 
 #Configurare Pagina Streamlit
@@ -198,7 +198,7 @@ with tab3:
         c1.metric("Numele setului", rs_status['set'])
         c2.metric("Election Timeout", f"{rs_config['settings']['electionTimeoutMillis']} ms")
         c3.metric("Heartbeat Interval", f"{rs_config['settings']['heartbeatIntervalMillis']} ms")
-        c4.metric("Heartbeat Timeout", f"{rs_config['settings']['heartbeatTimeoutSecs']} ms")
+        c4.metric("Heartbeat Timeout", f"{rs_config['settings']['heartbeatTimeoutSecs']} s")
 
         
         #Membri si Stare

@@ -6,7 +6,7 @@ services:
     image: mongo:latest
     container_name: mongo_sa
     ports:
-      - "27017:27017"
+      - "27099:27017"
     networks:
       - mongo-net
 
@@ -19,21 +19,25 @@ services:
     container_name: mongo_rs1
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     ports:
-      - "27027:27017"
+      - "27017:27017"
     networks:
       - mongo-net
   
   mongo-rs2:
     image: mongo:latest
     container_name: mongo_rs2
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018"]
+    ports:
+      - "27018:27018"
     networks:
       - mongo-net
   
   mongo-rs3:
     image: mongo:latest
     container_name: mongo_rs3
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019"]
+    ports:
+      - "27019:27019"
     networks:
       - mongo-net
 
