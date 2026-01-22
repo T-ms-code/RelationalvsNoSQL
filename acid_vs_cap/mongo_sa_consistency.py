@@ -12,7 +12,6 @@ coll = db.doctors
 
 
 def setup_data():
-    coll.delete_many({})
     #Initializam cu lista goala de specialitati
     coll.insert_one({
         "_id": 5000, 

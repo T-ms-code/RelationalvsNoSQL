@@ -93,10 +93,10 @@ MongoDB nu oferă constrângeri de integritate referențială (Foreign Keys) la 
 ![NoSQL Schema Diagram](diagrams/nosql_schema_diagram.png)
 
 ### Crearea și popularea bazei de date
-Pentru a demonstra diferențele de performanță și arhitectură, folosim Docker pentru a rula trei instanțe diferite de MongoDB simultan([3](#ref3)):
-a. Standalone: O instanță simplă (Port 27017).
-b. Replica Set: Un cluster cu 3 noduri pentru disponibilitate ridicată (Primary pe Port 27027, 27028 sau 27029).
-c. Sharded Cluster: O arhitectură scalabilă cu Router (mongos), Config Server și un Shard (Router pe Port 27067).
+Pentru a demonstra diferențele de performanță și arhitectură, folosim Docker pentru a rula trei instanțe diferite de MongoDB simultan([3](#ref3)):  
+a. Standalone: O instanță simplă (Port 27099).  
+b. Replica Set: Un cluster cu 3 noduri pentru disponibilitate ridicată (Primary pe Port 27017, 27018 sau 27019).  
+c. Sharded Cluster: O arhitectură scalabilă cu Router (mongos), Config Server și un Shard (Router pe Port 27067).  
 
 Pașii de configurare:
 1. Instalarea Docker Desktop de aici https://docs.docker.com/desktop/  și pornirea containerelor folosind fișierul docker-compose.yml din rădăcina proiectului (după ce pornim Docker Desktop):
@@ -111,7 +111,7 @@ Cateva informatii despre .yml:
 - In services, sunt definite trei tipuri de baze MongoDB: standalone, replica set si sharded cluster, fiecare configurat cu porturile necesare.
 - Nu folosesc volume mapping pentru persistenta datelor, deoarece scopul este testarea performantei și comportamentului in memorie. Astfel, datele sunt volatile și se pierd la oprirea containerelor.  
 - Fiecare baza de date MongoDB este compusa dintr-unul sau mai multe containere (StandAlone: primul, ReplicaSet: urmatoarele trei, Sharded Cluster: restul). 
-- Toate serviciile/containerele au un nume sugestiv extern (numele serviciului), au un nume sugestiv intern (numele din retea; DNS intern), folosesc imaginea oficiala MongoDB (mongo:latest) și comunică printr-o rețea Docker dedicată (mongo_net). 
+- Toate serviciile/containerele au un nume sugestiv extern (numele containerului), au un nume sugestiv intern (numele din retea; DNS intern), folosesc imaginea oficiala MongoDB (mongo:latest) și comunică printr-o rețea Docker dedicată (mongo_net). 
 - RepicaSet-ul are trei noduri: mongo-rs1, mongo-rs2 si mongo-rs3, Sharded Cluster-ul are un config server cu 2 noduri (mongo-cfg1/2; in practică sunt cel putin 3), două shard-uri cu cate 3 noduri (mongo-shard11, mongo-shard12, mongo-shard13 și  mongo-shard21, mongo-shard22, mongo-shard23) și un router (mongo-router).
 - In "command" suprascriem comanda implicita de start a imaginii MongoDB pentru a specifica parametrii necesari fiecarei configuratii.
 La STANDALONE nu apare, căci se folosește configuratia implicită. 
@@ -138,7 +138,7 @@ Câteva informații despre script:
 - **Am folosit Gemini ([7](#ref7)) pentru a crea comanda de modificare a dimensiunii chunk-urilor și pentru a seta regulile de sharding corect.**
 
 
-3. Punerea in fisierul hosts.txt a intrarilor pentru DNS-urile interne ale containerelor lui MongoDB ReplisaSET (numelere serviciilor din docker-compose.yml), pentru a putea fi accesate din Windows (pentru testare manuala ulterioara, daca e nevoie): 127.0.0.1 mongo_rs1 mongo_rs2 mongo_rs3. Avem de nevoie de asta deoarece nu aveam un router asa cum e la Sharded Cluster, iar noi dorim să accesăm intrega colecție, nu doar membrii.
+3. Punerea în fișierul hosts.txt a intrărilor pentru DNS-urile interne ale containerelor MongoDB Replica Set (numele serviciilor din docker-compose.yml), pentru a putea fi accesate din Windows (pentru testare manuală ulterioară, dacă este nevoie): 127.0.0.1 mongo_rs1 mongo_rs2 mongo_rs3. Avem nevoie de acest lucru deoarece nu avem un router, așa cum este în cazul Sharded Cluster, iar noi dorim să accesăm întreaga colecție, nu doar membrii individuali. 
 
 
 4. Instalarea bibliotecii pymongo pentru interacțiunea cu Python:
@@ -168,7 +168,7 @@ docker-compose down
 ---
 
 ## Dashboard pentru distribuție, modelare și arhitectură a datelor
-Pentru a vizualiza și compara modelele de date relaționale și NoSQL, am creat un dashboard interactiv folosind Streamlit, folosind **Gemini ([8](#ref8))**, dar și **cursul despre replicare și sharding**. Acesta permite explorarea diagramelor, a deciziilor de modelare și a arhitecturii alese pentru fiecare tip de bază de date.
+Pentru a vizualiza și compara modelele de date relaționale și NoSQL, am creat un dashboard interactiv folosind Streamlit, cu ajutorul lui **Gemini ([8](#ref8))**, dar și a **cursului despre replicare și sharding**. Acesta permite explorarea diagramelor, a deciziilor de modelare și a arhitecturii alese pentru fiecare tip de bază de date.
 
 Pasii pentru rularea dashboard-ului:
 1. Instalarea streamlit, pandas (pentru tabele) și plotly (pentru grafice plăcute):
@@ -235,14 +235,14 @@ Intai de toate, trebuie sa definim cele doua concepte:
 - Combinația A + C este mereu prezentă pentru baza relațională, totuși nu există P: dacă pică server-ul ⇒ pică baza.
 MongoDB este considerată CP, întrucât, la partiționare / într-un sistem distribuit, în timpul election, scrierile se opresc complet pentru a asigura consistența, iar citirile merg doar cu anumite preferințe.
 
-- Scripturile de la acest capitol se găsesc în folderul acid_vs_cap si ele necesită reluarea pașilor de creare și populare a bazelor de date (atât Oracle, cât și MongoDB) pentru a asigura un mediu curat pentru testare de fiecare dată.
+- **Scripturile de la acest capitol se găsesc în folderul acid_vs_cap si ele necesită reluarea pașilor de creare și populare a bazelor de date (atât Oracle, cât și MongoDB) pentru a asigura un mediu curat pentru testare de fiecare dată.**
 
 - Pentru o comparație detaliată între cele două modele, voi analiza comportamentul fiecărei configurații MongoDB în contextul teoremei CAP, comparativ cu modelul ACID al Oracle Database: 
 
 ### Consistență CAP
-Fiind un singur server, Oracle nu are probleme de consistență, toate tranzacțiile fiind **izolate** și țin cont de **atomicitate**. Astfel, intre sesiuni diferite se văd doar datele confirmate (committed). Pe de altă parte, MongoDB oferă diferite niveluri de consistență în funcție de configurația aleasă:
+Fiind un singur server, Oracle nu are probleme de consistență, toate tranzacțiile sunt **izolate** și țin cont de **atomicitate**. Astfel, intre sesiuni diferite se văd doar datele confirmate (committed). Pe de altă parte, MongoDB oferă diferite niveluri de consistență în funcție de configurația aleasă:
 - Standalone: Oferă consistență puternică, deoarece toate operațiile sunt gestionate de un singur nod.
-- Replica Set: Oferă consistență eventuală în mod implicit, dar poate fi configurat pentru consistență puternică prin setarea Write Concern la "majority" și Read Preference la "primary".
+- Replica Set: Oferă consistență "eventuală" (în mod implicit), dar poate fi configurat pentru consistență puternică prin setarea Write Concern la "majority" și Read Preference la "primary".
 - Sharded Cluster: Similar cu Replica Set, oferă consistență eventuală în mod implicit, dar poate fi configurat pentru consistență puternică prin setarea Write Concern și Read Preference corespunzătoare.
 De asemenea, MongoDB este autocommited, adică fiecare operație de scriere este confirmată imediat după ce este efectuată, fără a necesita o tranzacție explicită. Deci, chiar dacă lucrăm pe același nod, datele pot fi alterate prin operatii concurente, ceea ce poate duce la inconsistențe temporare.
 
@@ -254,8 +254,8 @@ Creez 2 sesiune diferite în Oracle SQL Developer (fiecare cu propria conexiune 
 ![im2](acid_vs_cap/im2.png)
 - Sesiunea 1: Fac commit la tranzacție.
 ![im3](acid_vs_cap/im3.png)
-- Sesiunea 2: Reiau citirea doctorului.
-![im4](acid_vs_cap/im4.png)
+- Sesiunea 2: Reiau citirea doctorului.  
+![im4](acid_vs_cap/im4.png)  
 Rezultatul: Doctorul nu este vizibil în sesiunea 2 până când sesiunea 1 nu face commit, demonstrând izolare și atomicitate, care garantează consistența (CAP) datelor.
 
 
@@ -299,7 +299,7 @@ Pentru a demonstra aceste fenomene, am folosit scriptul `mongo_rs_consistency.py
 python acid_vs_cap/mongo_rs_consistency.py
 ```
 
-![im6](acid_vs_cap/im6.png)
+![im6](acid_vs_cap/im6.png)  
 Obervații:
 - În primul scenariu, citirea după scriere returnează întotdeauna valoarea corectă, demonstrând consistența puternică. Totuși, procesul durează mai mult din cauza așteptării replicării.
 - În al doilea scenariu, citirea după scriere poate returna `null` sau o valoare veche, evidențiind inconsistența temporară datorată replicării asincrone. Totusi, latența este mult mai mică.
@@ -312,8 +312,8 @@ Obervații:
 Fiind un singur server, Oracle nu are toleranță la partiționare; dacă serverul cade, baza de date devine indisponibilă. Pe de altă parte, MongoDB este proiectat pentru a funcționa în medii distribuite și oferă toleranță la partiționare prin replicare și sharding:
 - Standalone: Nu oferă toleranță la partiționare, deoarece este o instanță unică.
 - Replica Set: Oferă toleranță la partiționare prin replicare. Dacă un nod cade, unul dintre secundare este promovat la primary printr-un proces de election automat.
-- Sharded Cluster: Oferă toleranță la partiționare prin combinarea replicării și sharding-ului. Fiecare shard este un replica set, iar datele sunt distribuite între shard-uri. Dacă un shard sau un nod cade, celelalte noduri continuă să funcționeze, iar datele rămân accesibile (**node failover**).
-Nodurile comunică permanent între ele printr-un protocol de heartbeat pentru a detecta căderile și a iniția procesele de election (pentru un nou primary) și failover. Duratele standart pentru election și failover sunt de ordinul secundelor (undeva la 12), dar pot varia în funcție de configurație și de condițiile rețelei. Pentru Mongo, election timeout-ul (cât timp așteaptă un nod înainte să inițieze un election) implicit este de 10 secunde, iar failover-ul poate dura câteva secunde după detectarea căderii. De asemenea, heartbeat time-out (timpul după care un nod este considerat căzut dacă nu răspunde) este de 10 secunde implicit, iar intervalul de heartbeat (între heartbeat-uri) este de 2 secunde. Exact aceleași valori sunt redate și pentru Sharded Cluster-ul nostru. Election-ul este chemat de către un secondary, atunci cândprimary nu răspunde. Procesul de election continuă până când nodul secundar cu cea mai mare prioritate e ales.([11](#ref11))
+- Sharded Cluster: Oferă toleranță la partiționare prin combinarea replicării și sharding-ului. Fiecare shard este un replica set, iar datele sunt distribuite între shard-uri (**de balancer**). Dacă un shard sau un nod cade, celelalte noduri continuă să funcționeze, iar datele rămân accesibile (**node failover**).
+Nodurile comunică permanent între ele printr-un protocol de heartbeat pentru a detecta căderile și a iniția procesele de election (pentru un nou primary) și failover. Duratele standart pentru election și failover sunt de ordinul secundelor (undeva la 12), dar pot varia în funcție de configurație și de condițiile rețelei. Pentru Mongo, election timeout-ul (cât timp așteaptă un nod înainte să inițieze un election) implicit este de 10 secunde, iar failover-ul poate dura câteva secunde după detectarea căderii. De asemenea, heartbeat time-out (timpul după care un nod este considerat căzut dacă nu răspunde) este de 10 secunde implicit, iar intervalul de heartbeat (între heartbeat-uri) este de 2 secunde. Exact aceleași valori sunt redate și pentru Sharded Cluster-ul nostru. Election-ul este chemat de către un secondary, atunci când primary nu răspunde. Procesul de election continuă până când nodul secundar cu cea mai mare prioritate e ales.([11](#ref11))
 
 Script care simulează căderea unui nod și demonstrează toleranța la partiționare în Replica Set/Sharded Cluster și lipsa ei în Standalone (respectiv Oracle):
 
@@ -332,7 +332,7 @@ Observații:
 
 
 ### Consistența ACID:
-Pentru Oracle, consistența este determinată de schema strictă și de constrângerile, referitoare la atribute, impuse la nivel de bază de date, care contine tabele normalizate și relațiile bine definite între ele. Orice tranzacție care încalcă aceste constrângeri este respinsă, asigurând astfel că baza de date rămâne într-o stare validă după fiecare tranzacție. Pentru MongoDB, consistența este gestionată la nivel de aplicație, deoarece nu există constrângeri de integritate referențială la nivel de SGBD, putând insera, in pricipiu, cam orice. **Indexii pot fi utilizati la impunerea unor constrângeri de unicitate, dar nu există mecanisme puternice automate pentru a menține relațiile între documente sau la nivel de sharding.** Pentru noi, in MongoDB, consistența este asigurată prin scriptul de populare a datelor, care respectă relațiile definite în modelul relațional și de constrângerea implicită a cheilor primare unice (_id).
+Pentru Oracle, consistența este determinată de schema strictă și de constrângerile referitoare la atribute, impuse la nivel de bază de date, care contine tabele normalizate și relațiile bine definite între ele. Orice tranzacție care încalcă aceste constrângeri este respinsă, asigurând astfel că baza de date rămâne într-o stare validă după fiecare tranzacție. Pentru MongoDB, consistența este gestionată la nivel de aplicație, deoarece nu există constrângeri de integritate referențială la nivel de SGBD, putând insera, in principiu, cam orice. **Indecșii pot fi utilizati la impunerea unor constrângeri de unicitate, dar nu există mecanisme puternice automate pentru a menține relațiile între documente (global) sau la nivel de sharding.** Pentru noi, in MongoDB, consistența este asigurată prin scriptul de populare a datelor, care respectă relațiile definite în modelul relațional și de constrângerea implicită a cheilor primare unice (_id).
 
 Urmatorul script ne demonstrează ideea de mai sus:
 ```bash
@@ -345,19 +345,38 @@ python acid_vs_cap/acid_consistency.py
 
 
 ### Cum alegem baza de date în funcție de tipul de date pe care îl avem de modelat, raportându-ne la teorema CAP [(9)](#ref9)?
-a.Daca vrem Consistency + Availability (CA)
+a.Daca vrem Consistency + Availability (CA)     
 Un sistem de tip CA garantează că toate nodurile returnează date consistente și că sistemul este disponibil atât timp cât nu apare o partiție de rețea. În cazul unei partiții, sistemul nu mai poate funcționa corect. Acest model este întâlnit în principal în sisteme non-distribuite sau slab distribuite, cum sunt aplicațiile bancare clasice, care folosesc baze de date relaționale și preferă scalarea vertical (date multe pe un unic server) în detrimentul celei orizontale (partitionarea pe mai multe noduri/servere/sharding-uri). Bazele SQL devin extrem de greoi sau chair deloc distribuite.
 
-b.Daca vrem Consistency + Partition Tolerance (CP)
-Un sistem CP garantează consistența datelor chiar și în prezența unor partiții de rețea sau căderi de noduri, însă poate deveni temporar indisponibil, respingând unele cereri. Acest model este potrivit pentru aplicații unde corectitudinea datelor este critică. Exemple de astfel de SGBD-uri sunt MongoDB și Apache HBase.
+b.Daca vrem Consistency + Partition Tolerance (CP)     
+Un sistem CP garantează consistența datelor chiar și în prezența unor partiții de rețea sau căderi de noduri, însă poate deveni temporar indisponibil, respingând unele cereri. Acest model este potrivit pentru aplicații unde corectitudinea datelor este critică (aplicații de vânzări). Exemple de astfel de SGBD-uri sunt MongoDB și Apache HBase.
 
-c.Daca vrem Availability + Partition Tolerance (AP)
+c.Daca vrem Availability + Partition Tolerance (AP)     
 Un sistem AP garantează disponibilitatea permanentă și toleranța la partiții, dar sacrifică consistența imediată, oferind în schimb consistență eventuală. Acest model este potrivit pentru aplicații de tip social media sau sisteme distribuite la scară largă. Exemple includ Apache Cassandra și Amazon DynamoDB.
 
 ---
 
+## Complexitate și performanță
+Chit că această secțiune a fost cuprinsă cumva în celelalte, o să o mai detaliez puțin aici. Voi face un script care să ruleze o cerere simplă și una complexă pe fiecare tip de bază de date (Oracle, MongoDB Standalone, Replica Set, Sharded Cluster), voi masura timpul (mediu) de răspuns (intervalul de timp care trece din momentul în care ai trimis o cerere până în momentul în care primești primul rezultat înapoi), throughput-ul (cantitatea de muncă pe care un sistem o poate efectua într-o anumită unitate de timp) și disponibilitatea sub stres (este măsura stabilității sistemului tău atunci când este "asaltat" de un număr mare de cereri simultane). Voi folosi un set de date mai mare pentru a observa diferențele de performanță în mod clar. Script-ul va realiza și un dashboard cu rezultatele. El a fost realizat cu ajutorul **Gemini** [(12)](#ref12) și se rulează cu comanda:
+```bash
+streamlit run dashboards/dashboard2.py
+```
+[![im9](acid_vs_cap/im9.png)](acid_vs_cap/im9.png)
+  
+- Observații:  
+ 
+1.Latența (Response Time): Oracle a înregistrat timpi de răspuns net superiori, favorizat de execuția nativă pe sistemul de operare gazdă, spre deosebire de MongoDB care a rulat într-un mediu virtualizat (Docker), introducând latență de rețea. Totuși, în ecosistemul MongoDB, arhitectura Sharded a demonstrat o latență mai mică sub sarcină concurentă comparativ cu Replica Set/Standalone, validând beneficiul distribuirii interogărilor pe mai multe noduri de procesare.       
+   
+2.Throughput (Debit): Deși Oracle domină metricile datorită maturității motorului SQL pe un singur nod puternic, MongoDB Sharded Cluster a depășit instanța Replica Set/Standalone la numărul de cereri pe secundă. Acest lucru confirmă scalabilitatea orizontală: capacitatea sistemului de a procesa volume mai mari de date prin adăugarea de noi noduri (pe mai multe noduri), evitând congestia specifică arhitecturilor monolitice.
+
+3.Disponibilitate sub stres: Deși în testul curent disponibilitatea a fost de 100% pentru toate arhitecturile, arhitectura Sharded Cluster oferă o limită de saturație mult mai ridicată. În condiții de stres extrem (sute de mii de cereri simultane), o instanță Standalone ar atinge rapid limitele resurselor (CPU/RAM), intrând în imposibilitatea de a răspunde. În schimb, Sharded Cluster-ul menține disponibilitatea serviciului prin distribuirea încărcării pe mai multe noduri (Load Balancing), prevenind supraîncărcarea unui singur server și garantând răspunsuri chiar și la volume de trafic care ar bloca o arhitectură monolitică.
 
 
+---
+
+Demo pentru executarea codului: https://www.youtube.com/watch?v=oAaMvvHntg4
+
+---
 
 ## Referințe
 
@@ -411,3 +430,6 @@ Last accessed: January 21, 2026
 [11] MongoDB Documentation, Replica Set Elections,
 https://www.mongodb.com/docs/manual/core/replica-set-elections/
 Last accessed: January 21, 2026
+
+<a id="ref12"></a>
+[12] Google, Gemini, https://gemini.google.com/, Date generated: January 21, 2026.

@@ -1,0 +1,44 @@
+COMEZILE PENTRU RULAREA CODULUI SURSA_SIMPLIFICAT:
+
+relational_schema.sql
+docker-compose up -d
+create_dbs/init_mongo.bat
+python create_dbs/populate_with_data.py
+streamlit run dashboards/dashboard1.py
+---------------------
+sesiune1.sql
+sesiune2.sql
+sesiune1.sql
+sesiune2.sql
+python acid_vs_cap/mongo_sa_consistency.py
+python acid_vs_cap/mongo_rs_consistency.py
+-----------------
+docker-compose down
+docker-compose up -d
+create_dbs/init_mongo.bat
+python create_dbs/populate_with_data.py
+-----------------
+python acid_vs_cap/partition_tolerance.py
+-----------------
+docker-compose down
+docker-compose up -d
+create_dbs/init_mongo.bat
+python create_dbs/populate_with_data.py
+-----------------
+python acid_vs_cap/acid_consistency.py
+-----------------
+docker-compose down
+docker-compose up -d
+create_dbs/init_mongo.bat
+python create_dbs/populate_with_data.py
+-----------------
+streamlit run dashboards/dashboard2.py
+docker-compose down
+
+
+COMANDA DE FORTARE PENTRU DIMENSIUNI ORACLE
+DE OBICEI NU E NEVOIE DE ASTA, DOAR CA EU AM STERS SCHEMA PENTRU ACEST DEMO, SI APOI AM REFACUT-O:
+BEGIN
+  DBMS_STATS.GATHER_SCHEMA_STATS('DB_AN3');
+END;
+/
